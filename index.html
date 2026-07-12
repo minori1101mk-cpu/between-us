@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#17171c" />
+  <meta name="description" content="A private shared expense tracker for Minori and Kulsoom." />
+
+  <title>Between Us</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="./style.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./config.js"></script>
+  <script src="./app.js" defer></script>
+</head>
+
+<body>
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <main class="app-shell">
+
+    <section id="welcomeView" class="view welcome-view">
+
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true">B</div>
+
+        <div>
+          <p class="eyebrow">SHARED EXPENSES</p>
+          <h1>Between Us</h1>
+        </div>
+      </div>
+
+      <div class="welcome-copy">
+        <p class="eyebrow">WELCOME</p>
+        <h2>Who are you?</h2>
+        <p>Choose your profile to see and add shared expenses.</p>
+      </div>
+
+      <div class="profile-grid">
+
+        <button class="profile-card" data-profile="Minori" type="button">
+          <span class="avatar avatar-minori">M</span>
+
+          <span>
+            <strong>Minori</strong>
+            <small>Continue as Minori</small>
+          </span>
+
+          <span class="arrow">→</span>
+        </button>
+
+        <button class="profile-card" data-profile="Kulsoom" type="button">
+          <span class="avatar avatar-kulsoom">K</span>
+
+          <span>
+            <strong>Kulsoom</strong>
+            <small>Continue as Kulsoom</small>
+          </span>
+
+          <span class="arrow">→</span>
+        </button>
+
+      </div>
+
+      <p class="privacy-note">
+        Your selection is remembered on this device.
+      </p>
+
+    </section>
+
+    <dialog id="pinDialog" class="modal">
+
+      <form id="pinForm" method="dialog" class="modal-card">
+
+        <button
+          class="icon-button close-dialog"
+          type="button"
+          aria-label="Close"
+        >
+          ×
+        </button>
+
+        <p class="eyebrow">PRIVATE SPACE</p>
+
+        <h2>Enter your shared PIN</h2>
+
+        <p class="muted">
+          You only need to do this once on each browser.
+        </p>
+
+        <label class="field">
+          <span>Shared PIN</span>
+
+          <input
+            id="pinInput"
+            type="password"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            minlength="4"
+            maxlength="12"
+            required
+          />
+        </label>
+
+        <p id="pinError" class="form-error" role="alert"></p>
+
+        <button class="primary-button full-width" type="submit">
+          Unlock
+        </button>
+
+      </form>
+
+    </dialog>
+
+    <section id="dashboardView" class="view dashboard-view hidden">
+
+      <header class="topbar">
+
+        <div>
+          <p id="greeting" class="eyebrow">GOOD MORNING</p>
+          <h1 id="activeUserName">Minori</h1>
+        </div>
+
+        <button
+          id="switchUserButton"
+          class="user-chip"
+          type="button"
+          aria-label="Switch user"
+        >
+          <span id="activeUserAvatar" class="avatar avatar-small">M</span>
+          <span>Switch</span>
+        </button>
+
+      </header>
+
+      <section class="month-row">
+
+        <button
+          id="previousMonthButton"
+          class="icon-button"
+          type="button"
+          aria-label="Previous month"
+        >
+          ←
+        </button>
+
+        <button id="monthPickerButton" class="month-button" type="button">
+          <span id="monthLabel">July 2026</span>
+          <small>Monthly overview</small>
+        </button>
+
+        <button
+          id="nextMonthButton"
+          class="icon-button"
+          type="button"
+          aria-label="Next month"
+        >
+          →
+        </button>
+
+        <input id="monthInput" class="visually-hidden" type="month" />
+
+      </section>
+
+      <section class="hero-card">
+
+        <div class="hero-card-header">
+
+          <div>
+            <p class="eyebrow light">OUTSTANDING BALANCE</p>
+            <h2 id="balanceHeadline">You are all settled</h2>
+          </div>
+
+          <span id="balanceBadge" class="status-badge">
+            SETTLED
+          </span>
+
+        </div>
+
+        <div class="balance-amount-row">
+          <span id="balanceAmount" class="balance-amount">¥0</span>
+          <span id="balanceDirection" class="balance-direction">
+            Nothing to transfer
+          </span>
+        </div>
+
+        <button id="settleButton" class="light-button" type="button">
+          Settle up
+        </button>
+
+      </section>
+
+      <section class="section-block">
+
+        <div class="section-heading">
+
+          <div>
+            <p class="eyebrow">THIS CYCLE</p>
+            <h2>Monthly totals</h2>
+          </div>
+
+          <button
+            id="openDetailsButton"
+            class="text-button"
+            type="button"
+          >
+            View details
+          </button>
+
+        </div>
+
+        <div class="summary-grid">
+
+          <article class="summary-card">
+
+            <div class="summary-person">
+              <span class="avatar avatar-minori avatar-small">M</span>
+              <span>Minori</span>
+            </div>
+
+            <strong id="minoriPaid">¥0</strong>
+            <small>Paid this cycle</small>
+
+            <div class="outstanding-line">
+              <span>Outstanding</span>
+              <b id="minoriOutstanding">¥0</b>
+            </div>
+
+          </article>
+
+          <article class="summary-card">
+
+            <div class="summary-person">
+              <span class="avatar avatar-kulsoom avatar-small">K</span>
+              <span>Kulsoom</span>
+            </div>
+
+            <strong id="kulsoomPaid">¥0</strong>
+            <small>Paid this cycle</small>
+
+            <div class="outstanding-line">
+              <span>Outstanding</span>
+              <b id="kulsoomOutstanding">¥0</b>
+            </div>
+
+          </article>
+
+        </div>
+
+      </section>
+
+      <section class="section-block recent-section">
+
+        <div class="section-heading">
+
+          <div>
+            <p class="eyebrow">LATEST</p>
+            <h2>Recent activity</h2>
+          </div>
+
+        </div>
+
+        <div id="recentActivity" class="activity-list"></div>
+
+      </section>
+
+      <button id="addExpenseButton" class="floating-action" type="button">
+        <span>＋</span>
+        Add expense
+      </button>
+
+    </section>
+
+  </main>
+
+  <dialog id="expenseDialog" class="modal">
+
+    <form id="expenseForm" method="dialog" class="modal-card">
+
+      <div class="modal-heading">
+
+        <div>
+          <p class="eyebrow">NEW ENTRY</p>
+          <h2>Add expense</h2>
+        </div>
+
+        <button
+          class="icon-button close-dialog"
+          type="button"
+          aria-label="Close"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <label class="field">
+        <span>Date</span>
+        <input id="expenseDate" type="date" required />
+      </label>
+
+      <label class="field">
+        <span>Place or description</span>
+
+        <input
+          id="expensePlace"
+          type="text"
+          maxlength="80"
+          placeholder="e.g. IKEA, groceries, electricity"
+          required
+        />
+      </label>
+
+      <label class="field">
+        <span>Amount</span>
+
+        <div class="money-input">
+          <span>¥</span>
+
+          <input
+            id="expenseAmount"
+            type="number"
+            min="1"
+            step="1"
+            inputmode="numeric"
+            placeholder="0"
+            required
+          />
+        </div>
+      </label>
+
+      <fieldset class="field">
+
+        <legend>Paid by</legend>
+
+        <div class="segmented-control">
+
+          <label>
+            <input type="radio" name="paidBy" value="Minori" />
+            <span>Minori</span>
+          </label>
+
+          <label>
+            <input type="radio" name="paidBy" value="Kulsoom" />
+            <span>Kulsoom</span>
+          </label>
+
+        </div>
+
+      </fieldset>
+
+      <p id="expenseError" class="form-error" role="alert"></p>
+
+      <button class="primary-button full-width" type="submit">
+        Save expense
+      </button>
+
+    </form>
+
+  </dialog>
+
+  <dialog id="settleDialog" class="modal">
+
+    <form id="settleForm" method="dialog" class="modal-card">
+
+      <div class="modal-heading">
+
+        <div>
+          <p class="eyebrow">SETTLEMENT</p>
+          <h2>Settle up</h2>
+        </div>
+
+        <button
+          class="icon-button close-dialog"
+          type="button"
+          aria-label="Close"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div class="segmented-control settlement-mode">
+
+        <label>
+          <input
+            type="radio"
+            name="settlementMode"
+            value="partial"
+            checked
+          />
+          <span>Partial</span>
+        </label>
+
+        <label>
+          <input
+            type="radio"
+            name="settlementMode"
+            value="full"
+          />
+          <span>Full</span>
+        </label>
+
+      </div>
+
+      <div id="partialSettlementFields">
+
+        <label class="field">
+          <span>From</span>
+
+          <select id="settlementFrom">
+            <option value="Minori">Minori</option>
+            <option value="Kulsoom">Kulsoom</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>To</span>
+
+          <select id="settlementTo">
+            <option value="Kulsoom">Kulsoom</option>
+            <option value="Minori">Minori</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>Amount</span>
+
+          <div class="money-input">
+            <span>¥</span>
+
+            <input
+              id="settlementAmount"
+              type="number"
+              min="1"
+              step="1"
+              inputmode="numeric"
+              placeholder="0"
+            />
+          </div>
+        </label>
+
+      </div>
+
+      <div id="fullSettlementMessage" class="info-card hidden">
+
+        <strong id="fullSettlementTitle">
+          Everything will be settled.
+        </strong>
+
+        <p id="fullSettlementText">
+          A settlement record will be saved and this cycle will close.
+        </p>
+
+      </div>
+
+      <p id="settleError" class="form-error" role="alert"></p>
+
+      <button
+        id="settlementSubmitButton"
+        class="primary-button full-width"
+        type="submit"
+      >
+        Save settlement
+      </button>
+
+    </form>
+
+  </dialog>
+
+  <dialog id="detailsDialog" class="modal modal-large">
+
+    <section class="modal-card details-card">
+
+      <div class="modal-heading sticky-heading">
+
+        <div>
+          <p class="eyebrow">MONTHLY HISTORY</p>
+          <h2 id="detailsTitle">July 2026</h2>
+        </div>
+
+        <button
+          class="icon-button close-dialog"
+          type="button"
+          aria-label="Close"
+        >
+          ×
+        </button>
+
+      </div>
+
+      <div class="details-tabs" role="tablist">
+
+        <button
+          class="details-tab active"
+          data-filter="all"
+          type="button"
+        >
+          All
+        </button>
+
+        <button
+          class="details-tab"
+          data-filter="expense"
+          type="button"
+        >
+          Expenses
+        </button>
+
+        <button
+          class="details-tab"
+          data-filter="settlement"
+          type="button"
+        >
+          Settlements
+        </button>
+
+      </div>
+
+      <div id="detailsList" class="activity-list details-list"></div>
+
+    </section>
+
+  </dialog>
+
+  <dialog id="confirmDialog" class="modal">
+
+    <form method="dialog" class="modal-card compact-card">
+
+      <p class="eyebrow">PLEASE CONFIRM</p>
+
+      <h2 id="confirmTitle">
+        Delete this entry?
+      </h2>
+
+      <p id="confirmMessage" class="muted"></p>
+
+      <div class="button-row">
+
+        <button
+          id="confirmCancel"
+          class="secondary-button"
+          type="button"
+        >
+          Cancel
+        </button>
+
+        <button
+          id="confirmAction"
+          class="danger-button"
+          type="button"
+        >
+          Delete
+        </button>
+
+      </div>
+
+    </form>
+
+  </dialog>
+
+</body>
+</html>
