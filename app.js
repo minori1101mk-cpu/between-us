@@ -585,24 +585,23 @@
       paid.Minori - fairShare;
 
     state.currentCycleSettlements.forEach(
-      (settlement) => {
-        const amount =
-          Number(settlement.amount);
+  (settlement) => {
+    const amount =
+      Number(settlement.amount);
 
-        if (
-          settlement.from_person === "Minori"
-        ) {
-          minoriNet -= amount;
-        }
+    if (
+      settlement.from_person === "Minori"
+    ) {
+      minoriNet += amount;
+    }
 
-        if (
-          settlement.to_person === "Minori"
-        ) {
-          minoriNet += amount;
-        }
-      }
-    );
-
+    if (
+      settlement.to_person === "Minori"
+    ) {
+      minoriNet -= amount;
+    }
+  }
+);
     if (Math.abs(minoriNet) < 0.5) {
       minoriNet = 0;
     }
